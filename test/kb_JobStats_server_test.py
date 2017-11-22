@@ -11,7 +11,7 @@ try:
 except:
     from configparser import ConfigParser  # py3
 
-from pprint import pprint  # noqa: F401
+from pprint import pprint, pformat  # noqa: F401
 
 from biokbase.workspace.client import Workspace as workspaceService
 from kb_JobStats.kb_JobStatsImpl import kb_JobStats
@@ -76,7 +76,7 @@ class kb_JobStatsTest(unittest.TestCase):
         return self.__class__.ctx
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    def test_your_method(self):
+    #def test_your_method(self):
         # Prepare test objects in workspace if needed using
         # self.getWsClient().save_objects({'workspace': self.getWsName(),
         #                                  'objects': []})
@@ -87,3 +87,15 @@ class kb_JobStatsTest(unittest.TestCase):
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
         pass
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    #@unittest.skip("skipped test_run_get_app_metrics")
+    def test_run_get_app_metrics(self):
+        m_params = {
+            'user_ids': [],
+            'time_range':(u'2017-08-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
+            'job_stage': 'complete'#'created', 'started', 'complete', 'canceled', 'error' or 'all'
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
+        print(pformat(ret[0]['job_states'][0]))

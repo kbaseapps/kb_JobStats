@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+#BEGIN_HEADER
+import logging
+from core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
+#END_HEADER
+
+
+class kb_JobStats:
+    '''
+    Module Name:
+    kb_JobStats
+
+    Module Description:
+    A KBase module: kb_JobStats
+This KBase SDK module implements methods for generating various KBase metrics on user job states.
+    '''
+
+    ######## WARNING FOR GEVENT USERS ####### noqa
+    # Since asynchronous IO can lead to methods - even the same method -
+    # interrupting each other, you must be *very* careful when using global
+    # state. A method could easily clobber the state set by another while
+    # the latter method is running.
+    ######################################### noqa
+    VERSION = "0.0.1"
+    GIT_URL = "https://github.com/kbaseapps/kb_JobStats.git"
+    GIT_COMMIT_HASH = "HEAD"
+
+    #BEGIN_CLASS_HEADER
+    #END_CLASS_HEADER
+
+    # config contains contents of config file in a hash or None if it couldn't
+    # be found
+    def __init__(self, config):
+        #BEGIN_CONSTRUCTOR
+        self.__LOGGER = logging.getLogger('UJS_CAT_NJS_DataUtils')
+        self.__LOGGER.setLevel(logging.INFO)
+        self.config = config
+        self.scratch = config['scratch']
+        self.ws_url = config['workspace-url']
+        #END_CONSTRUCTOR
+        pass
+
+
+    def get_app_metrics(self, ctx, params):
+        """
+        :param params: instance of type "AppMetricsParams" (job_stage has one
+           of 'created', 'started', 'complete', 'canceled', 'error' or 'all'
+           (default)) -> structure: parameter "user_ids" of list of type
+           "user_id" (A string for the user id), parameter "time_range" of
+           type "time_range" (A time range defined by its lower and upper
+           bound.) -> tuple of size 2: parameter "t_lowerbound" of type
+           "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is
+           the difference in time to UTC in the format +/-HHMM, eg:
+           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
+           time)), parameter "t_upperbound" of type "timestamp" (A time in
+           the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time
+           to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
+           time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "job_stage"
+           of String
+        :returns: instance of type "AppMetricsResult" -> structure: parameter
+           "job_states" of list of type "job_state" (Arbitrary key-value
+           pairs about a job.) -> mapping from String to String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN get_app_metrics
+        du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
+        output = du.generate_app_metrics(params)
+        #END get_app_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method get_app_metrics return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+    def status(self, ctx):
+        #BEGIN_STATUS
+        returnVal = {'state': "OK",
+                     'message': "",
+                     'version': self.VERSION,
+                     'git_url': self.GIT_URL,
+                     'git_commit_hash': self.GIT_COMMIT_HASH}
+        #END_STATUS
+        return [returnVal]

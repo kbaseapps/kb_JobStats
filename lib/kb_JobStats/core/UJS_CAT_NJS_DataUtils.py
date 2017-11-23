@@ -59,18 +59,12 @@ class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config, provenance):
         self.workspace_url = config['workspace-url']
-        self.token = os.environ['KB_AUTH_TOKEN']
         self.provenance = provenance
 
         self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
         _mkdir_p(self.scratch)
 
-        if 'shock-url' in config:
-            self.shock_url = config['shock-url']
-        if 'handle-service-url' in config:
-            self.handle_url = config['handle-service-url']
-
-        self.ws_client = Workspace(self.workspace_url, token=self.token)
+        self.ws_client = Workspace(self.workspace_url)
         #self.cat_client = Catalog(self.callback_url)
         self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/')
         self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/')

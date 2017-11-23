@@ -76,12 +76,14 @@ class UJS_CAT_NJS_DataUtils:
     def generate_app_metrics(self, params):
         """
         """
+        if params is None:
+            params['user_ids'] = []
         if params.get('user_ids', None) is None:
             user_ids = []
         else:
             user_ids = params['user_ids']
-        if not isinstance(params['user_ids'], list):
-            raise ValueError('Variable user_ids' + ' must be a list.')
+            if not isinstance(params['user_ids'], list):
+                raise ValueError('Variable user_ids' + ' must be a list.')
 
         if not params.get('time_range', None) is None:
             time_start, time_end = params['time_range']

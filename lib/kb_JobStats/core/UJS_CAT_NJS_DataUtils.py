@@ -89,7 +89,7 @@ class UJS_CAT_NJS_DataUtils:
             time_start, time_end = params['time_range']
         else: #set the most recent 48 hours range
             time_end = datetime.datetime.utcnow()
-            time_start = utcnow - datetime.timedelta(hours=48)
+            time_start = time_end - datetime.timedelta(hours=48)
 
         if not params.get('job_stage', None) is None:
             job_stage = params['job_stage']

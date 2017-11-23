@@ -98,4 +98,6 @@ class kb_JobStatsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
-        print(pformat(ret[0]['job_states'][0]))
+        #ret = self.getImpl().get_app_metrics(self.getContext(), {})
+        if len(ret[0]['job_states']) > 0:
+            print(pformat(ret[0]['job_states'][0]))

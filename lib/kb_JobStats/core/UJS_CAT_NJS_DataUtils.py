@@ -55,6 +55,15 @@ def _timestamp_from_utc(date_utc_str):
     dt = _datetime_from_utc(date_utc_str)
     return int(time.mktime(dt.timetuple())*1000) #in microseconds
 
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
+
 class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config, provenance):
@@ -90,6 +99,8 @@ class UJS_CAT_NJS_DataUtils:
         else: #set the most recent 48 hours range
             time_end = datetime.datetime.utcnow()
             time_start = time_end - datetime.timedelta(hours=48)
+        time_start = _convert_to_datetime(time_start)
+        time_end = _convert_to_datetime(time_end)
 
         if not params.get('job_stage', None) is None:
             job_stage = params['job_stage']
@@ -526,11 +537,11 @@ class UJS_CAT_NJS_DataUtils:
         filtered_ujs = []
         for ujs_i in job_sts:
             if isinstance(ujs_i['creation_time'], int):
-                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
+                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time'] / 1000)
             else:
                 cr_time = _datetime_from_utc(ujs_i['creation_time'])
-            if (cr_time <= _datetime_from_utc(j_end_time) and
-                        cr_time >= _datetime_from_utc(j_start_time)):
+            #log("Comparing {} between {} and {}".format(str(cr_time), str(j_start_time), str(j_end_time)))
+            if (cr_time <= j_end_time and cr_time >= j_start_time):
                 if (j_stage == 'all' or j_stage == ujs_i['stage']):
                     filtered_ujs.append(ujs_i)
 

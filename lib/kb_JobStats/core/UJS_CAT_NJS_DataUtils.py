@@ -59,7 +59,6 @@ class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config, provenance):
         self.workspace_url = config['workspace-url']
-        self.callback_url = os.environ['SDK_CALLBACK_URL']
         self.token = os.environ['KB_AUTH_TOKEN']
         self.provenance = provenance
 

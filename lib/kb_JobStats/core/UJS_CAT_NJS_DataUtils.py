@@ -519,8 +519,6 @@ class UJS_CAT_NJS_DataUtils:
                 if (j_stage == 'all' or j_stage == ujs_i['stage']):
                     filtered_ujs.append(ujs_i)
 
-        filtered_ujs = []
-        filtered_ujs.append({'mytest_id': 'qzhang'})
         return filtered_ujs
 
     def process_parameters(self, params):

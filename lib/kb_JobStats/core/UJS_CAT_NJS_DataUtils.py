@@ -71,10 +71,6 @@ class UJS_CAT_NJS_DataUtils:
         self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
         _mkdir_p(self.scratch)
 
-        #self.cat_client = Catalog(self.callback_url)
-        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/')
-        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/')
-        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/')
         self.metrics_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         _mkdir_p(self.metrics_dir)
 
@@ -83,6 +79,10 @@ class UJS_CAT_NJS_DataUtils:
         """
         """
         self.ws_client = Workspace(self.workspace_url, token=token)
+        #self.cat_client = Catalog(self.callback_url)
+        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
 
         params = self.process_parameters(input_params)
         user_ids = params['user_ids']

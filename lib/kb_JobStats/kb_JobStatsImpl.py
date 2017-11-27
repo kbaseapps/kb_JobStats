@@ -37,6 +37,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
         self.config = config
         self.scratch = config['scratch']
         self.ws_url = config['workspace-url']
+        self.ujs_cat_njs_util = UJS_CAT_NJS_DataUtils(self.config)
         #END_CONSTRUCTOR
         pass
 
@@ -64,8 +65,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
         # ctx is the context object
         # return variables are: output
         #BEGIN get_app_metrics
-        du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        output = du.generate_app_metrics(params)
+        output = self.ujs_cat_njs_util.generate_app_metrics(params, ctx['token'])
         #END get_app_metrics
 
         # At some point might do deeper type checking...

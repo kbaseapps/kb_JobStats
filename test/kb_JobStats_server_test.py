@@ -92,9 +92,9 @@ class kb_JobStatsTest(unittest.TestCase):
     #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids': [],
-            'time_range':(u'2017-08-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
-            'job_stage': 'complete'#'created', 'started', 'complete', 'canceled', 'error' or 'all'
+            'user_ids': ['qzhang'],#'user_ids': [],
+            'time_range':(u'2016-08-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
+            'job_stage': 'created'#'created', 'started', 'complete', 'canceled', 'error' or 'all'
         }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)

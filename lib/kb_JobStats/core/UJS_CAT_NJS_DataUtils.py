@@ -177,6 +177,7 @@ class UJS_CAT_NJS_DataUtils:
         ret_ujs = []
         try:
             nar_jobs = self.ujs_client.list_jobs2({
+                'filter': 'S',#all jobs are returned
                 'authstrat': 'kbaseworkspace',
                 'authparams': wid_p
             })

@@ -60,4 +60,14 @@ module kb_JobStats {
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult output) authentication required;
 
+    typedef structure {
+        string filter_str; 
+    } UserMetricsParams;
+
+    typedef structure {
+        UnspecifiedObject user_metrics;
+    } UserMetricsResult;
+    
+    funcdef get_user_metrics(UserMetricsParams params)
+        returns (UserMetricsResult output) authentication required;
 };

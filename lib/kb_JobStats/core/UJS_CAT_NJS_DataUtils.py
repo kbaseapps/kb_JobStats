@@ -20,8 +20,8 @@ from Workspace.WorkspaceClient import Workspace as Workspace
 from Catalog.CatalogClient import Catalog
 from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
-#import biokbase.narrative.clients as clients
-#from biokbase.catalog.Client import Catalog
+from UserProfile.UserProfileClient import UserProfile
+
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -64,6 +64,7 @@ def _convert_to_datetime(dt):
             new_dt = _datetime_from_utc(dt)
     return new_dt
 
+
 class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config):
@@ -78,11 +79,7 @@ class UJS_CAT_NJS_DataUtils:
     def generate_app_metrics(self, input_params, token):
         """
         """
-        self.ws_client = Workspace(self.workspace_url, token=token)
-        #self.cat_client = Catalog(self.callback_url)
-        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
-        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
-        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.init_clients(token)
 
         params = self.process_parameters(input_params)
         user_ids = params['user_ids']
@@ -90,7 +87,7 @@ class UJS_CAT_NJS_DataUtils:
         time_end = params['time_end']
         job_stage = params['job_stage']
 
-        ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
+        ws_owner, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
         #log("Before time_stage filter:{}".format(len(ujs_ret)))
 
@@ -101,9 +98,68 @@ class UJS_CAT_NJS_DataUtils:
         return {'job_states':jt_filtered_ujs}
 
 
+    def generate_user_metrics(self, input_params, token):
+        """
+        """
+        self.init_clients(token)
+
+        if input_parameters.get('filter_str', None) is None:
+            user_filter = ''
+        else:
+            user_filter = input_parameters['filter_str']
+
+        kb_users = self.get_user_names(user_filter)
+
+        user_names = []
+        real_names = []
+        for u in kb_users:
+            user_names.append(u['username'])
+            real_names.append(u['realname'])
+
+        kb_uprof = self.get_user_profiles(user_names)
+
+        return {'user_metrics': kb_uprof}
+
+
+    def get_user_profiles(self, user_ids):
+        """
+        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        typedef structure {
+                User user;
+                UnspecifiedObject profile;
+        } UserProfile;
+
+        """
+        log("Fetching profile info for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
+        user_prof = self.uprf_client.get_user_profile(user_ids)
+        #log(pformat(user_prof))
+        return user_prof
+
+
+    def get_user_names(self, filter_str):
+        """
+        get_user_names: given a filter string, get a list of User of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        """
+        log("Fetching user name details for {} users\n{}".format(
+                'the' if filter_str else 'all', 'with id containing ' + filter_str if filter_str else ''))
+        user_names = self.uprf_client.filter_users({'filter': filter_str})
+        log(pformat(user_names))
+        return user_names
+
+
     def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
         """
-        get_user_workspaces: given the user ids, retrieve a list of data structure as the example below:
+        get_user_workspaces: given the user ids, get a list of data structure as the example below:
         typedef tuple<ws_id id,
               ws_name workspace,
               username owner,
@@ -139,7 +195,6 @@ class UJS_CAT_NJS_DataUtils:
         ws_owners = [ws[2] for ws in ws_info]
 
         return (ws_owners, ws_ids)
-
 
     def get_user_and_job_states(self, ws_ids):
         """
@@ -262,7 +317,7 @@ class UJS_CAT_NJS_DataUtils:
                             u_j_s['exec_start_time'] = u_j_s['time_info'][1]
                         if 'finish_time' in jbs:
                             u_j_s['finish_time'] = jbs['finish_time']
-                        elif u_j_s['stage'] == 'completed':
+                        elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'):
                             u_j_s['finish_time'] = u_j_s['time_info'][1]
                     except KeyError as e_key:
                         log("KeyError for " + pformat(e_key))
@@ -275,7 +330,8 @@ class UJS_CAT_NJS_DataUtils:
                     u_j_s['creation_time'] = _timestamp_from_utc(u_j_s['time_info'][0])
                     if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
                         u_j_s['exec_start_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
-                    elif u_j_s['stage'] == 'completed':
+                    elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'
+                            or u_j_s['job_state'] == 'completed' or u_j_s['status'] == 'done'):
                         u_j_s['finish_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
                     #get some info from the client groups
                     for clnt in c_groups:
@@ -288,18 +344,21 @@ class UJS_CAT_NJS_DataUtils:
                     #log("*******From ujs result directly*******:\n")
                     #log(pformat(u_j_s))
 
-                if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
-                    delta = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000)
+                if ('exec_start_time' in u_j_s and u_j_s['stage'] == 'started'
+                        and u_j_s['status'] == 'running'):
+                    delta = (datetime.datetime.utcnow() -
+                            datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                     u_j_s['running_time'] = str(delta) #delta.total_seconds()
-                elif u_j_s['stage'] == 'complete' or u_j_s['job_state'] == 'completed':
+                elif ('finish_time' in u_j_s and 'exec_start_time' in u_j_s
+                        and u_j_s['status'] == 'done'):
                     delta = (datetime.datetime.fromtimestamp(u_j_s['finish_time']/1000) -
                             datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                     u_j_s['run_time'] = str(delta) #delta.total_seconds()
-                elif (u_j_s['stage'] == 'created'
-                      and u_j_s['status'] not in ['done','running','canceled by user','error']
-                      and job_error[j_idx] == {}):
+                elif (u_j_s['stage'] == 'created' and 'creation_time' in u_j_s
+                        and u_j_s['status'] not in ['done','running','canceled by user','error']
+                        and job_error[j_idx] == {}):
                     delta = (datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(
                                     u_j_s['creation_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
@@ -521,6 +580,16 @@ class UJS_CAT_NJS_DataUtils:
                     filtered_ujs.append(ujs_i)
 
         return filtered_ujs
+
+
+    def init_clients(self, token):
+        self.ws_client = Workspace(self.workspace_url, token=token)
+        #self.cat_client = Catalog(self.callback_url)
+        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://kbase.us/services/auth/', token=token)
+
 
     def process_parameters(self, params):
         if params.get('user_ids', None) is None:

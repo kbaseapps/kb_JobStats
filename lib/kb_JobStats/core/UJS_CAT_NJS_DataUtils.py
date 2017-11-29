@@ -584,10 +584,10 @@ class UJS_CAT_NJS_DataUtils:
     def init_clients(self, token):
         #for prod environment
         self.ws_client = Workspace(self.workspace_url, token=token)
-        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
-        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
-        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
-        self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
+        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
+        self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
         '''
         #for CI environment
         self.ws_client = Workspace(self.workspace_url, token=token)

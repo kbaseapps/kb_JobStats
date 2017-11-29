@@ -70,6 +70,9 @@ def _convert_to_datetime(dt):
             new_dt = _datetime_from_utc(dt)
     return new_dt
 
+def _unix_time_millis(dt):
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    return int((dt - epoch).total_seconds()*1000)
 
 class UJS_CAT_NJS_DataUtils:
 
@@ -144,7 +147,7 @@ class UJS_CAT_NJS_DataUtils:
         time_end = params['time_end']
         job_stage = params['job_stage']
 
-        ws_owner, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
+        ws_owner, ws_ids = self.get_user_workspaces(user_ids, time_start, time_end, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
         total_ujs_count = len(ujs_ret)
         log("Before time_stage filter:{}".format(total_ujs_count))
@@ -152,11 +155,12 @@ class UJS_CAT_NJS_DataUtils:
         jt_filtered_ujs = self.filterUJS_by_time_stage(ujs_ret, job_stage, time_start, time_end)
         period_ujs_count = len(jt_filtered_ujs)
         log("After time_stage filter:{}".format(period_ujs_count))
-        #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
+        #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids) 
+        #return {'job_states': ujs_ret}
         return {'job_states':jt_filtered_ujs}
 
 
-    def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
+    def get_user_workspaces(self, user_ids, st_time, ed_time, showDeleted=0, showOnlyDeleted=0):
         """
         get_user_workspaces: given the user ids, get a list of data structure as the example below:
         typedef tuple<ws_id id,
@@ -181,12 +185,14 @@ class UJS_CAT_NJS_DataUtils:
         return a list of ws_owners and ws_ids
         """
         #log("Fetching workspace ids for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
-        #ws_info = self.ws_client.list_workspace_info({})
         ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
                         'perm':'r',
-                        'excludeGlobal': 1
+                        #'after': '2017-04-03T08:56:32Z',
+                        #'before': '2017-11-03T08:56:32Z'
+                        'after': st_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        'before': ed_time.strftime("%Y-%m-%dT%H:%M:%SZ")
                 })
 
         #log(pformat(ws_info))
@@ -582,6 +588,7 @@ class UJS_CAT_NJS_DataUtils:
 
 
     def init_clients(self, token):
+        '''
         #for prod environment
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
@@ -595,7 +602,6 @@ class UJS_CAT_NJS_DataUtils:
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        '''
 
 
     def process_user_parameters(self, params):

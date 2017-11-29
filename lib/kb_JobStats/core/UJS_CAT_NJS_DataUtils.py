@@ -147,11 +147,11 @@ class UJS_CAT_NJS_DataUtils:
         ws_owner, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
         total_ujs_count = len(ujs_ret)
-        #log("Before time_stage filter:{}".format(total_ujs_count))
+        log("Before time_stage filter:{}".format(total_ujs_count))
 
         jt_filtered_ujs = self.filterUJS_by_time_stage(ujs_ret, job_stage, time_start, time_end)
         period_ujs_count = len(jt_filtered_ujs)
-        #log("After time_stage filter:{}".format(period_ujs_count))
+        log("After time_stage filter:{}".format(period_ujs_count))
         #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
         return {'job_states':jt_filtered_ujs}
 
@@ -582,20 +582,20 @@ class UJS_CAT_NJS_DataUtils:
 
 
     def init_clients(self, token):
+        '''
         #for prod environment
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
         self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://kbase.us/services/auth/', token=token)
-        #for CI environment
         '''
+        #for CI environment
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        '''
 
 
     def process_user_parameters(self, params):

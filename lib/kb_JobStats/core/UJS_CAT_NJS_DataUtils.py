@@ -189,8 +189,6 @@ class UJS_CAT_NJS_DataUtils:
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
                         'perm':'r',
-                        #'after': '2017-04-03T08:56:32Z',
-                        #'before': '2017-11-03T08:56:32Z'
                         'after': st_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         'before': ed_time.strftime("%Y-%m-%dT%H:%M:%SZ")
                 })
@@ -588,7 +586,6 @@ class UJS_CAT_NJS_DataUtils:
 
 
     def init_clients(self, token):
-        '''
         #for prod environment
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
@@ -602,6 +599,7 @@ class UJS_CAT_NJS_DataUtils:
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+        '''
 
 
     def process_user_parameters(self, params):

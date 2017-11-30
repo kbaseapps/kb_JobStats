@@ -2,7 +2,7 @@
 #BEGIN_HEADER
 import logging
 from core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
-from ujsdb_controller import UJSmongoDBController
+#from ujsdb_controller import UJSmongoDBController
 #END_HEADER
 
 
@@ -39,7 +39,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
         self.scratch = config['scratch']
         self.ws_url = config['workspace-url']
         self.ujs_cat_njs_util = UJS_CAT_NJS_DataUtils(self.config)
-        self.ujsc = UJSmongoDBController(self.config);
+        #self.ujsc = UJSmongoDBController(self.config);
         #END_CONSTRUCTOR
         pass
 
@@ -108,7 +108,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
         # ctx is the context object
         # return variables are: ujs_records
         #BEGIN get_user_job_states
-        ujs_records = self.ujsc.get_user_job_states(ctx['user_id'], params)
+        ujs_records = {}#self.ujsc.get_user_job_states(ctx['user_id'], params)
         #END get_user_job_states
 
         # At some point might do deeper type checking...

@@ -74,6 +74,7 @@ def _unix_time_millis(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
     return int((dt - epoch).total_seconds()*1000)
 
+
 class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config):
@@ -150,11 +151,12 @@ class UJS_CAT_NJS_DataUtils:
         ws_owner, ws_ids = self.get_user_workspaces(user_ids, time_start, time_end, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
         total_ujs_count = len(ujs_ret)
-        log("Before time_stage filter:{}".format(total_ujs_count))
+        #log("Before time_stage filter:{}".format(total_ujs_count))
 
         jt_filtered_ujs = self.filterUJS_by_time_stage(ujs_ret, job_stage, time_start, time_end)
         period_ujs_count = len(jt_filtered_ujs)
-        log("After time_stage filter:{}".format(period_ujs_count))
+        jt_filtered_ujs = self.convert_time_info(jt_filtered_ujs)
+        #log("After time_stage filter:{}".format(period_ujs_count))
         #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids) 
         #return {'job_states': ujs_ret}
         return {'job_states':jt_filtered_ujs}
@@ -266,7 +268,7 @@ class UJS_CAT_NJS_DataUtils:
         return ret_ujs
 
     def retrieve_ujs_via_njs(self, c_groups, job_ids, job_owners, job_stages,
-                        job_status, job_time_info,job_error, job_desc):
+                        job_status, job_time_info, job_error, job_desc):
         ujs_ret = []
         try:
             #log("Calling njs.check_jobs for {} jobs".format(len(job_ids)))
@@ -317,11 +319,11 @@ class UJS_CAT_NJS_DataUtils:
                         if 'exec_start_time' in jbs:
                             u_j_s['exec_start_time'] = jbs['exec_start_time']
                         elif u_j_s['stage'] == 'started':
-                            u_j_s['exec_start_time'] = u_j_s['time_info'][1]
+                            u_j_s['exec_start_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
                         if 'finish_time' in jbs:
                             u_j_s['finish_time'] = jbs['finish_time']
                         elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'):
-                            u_j_s['finish_time'] = u_j_s['time_info'][1]
+                            u_j_s['finish_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
                     except KeyError as e_key:
                         log("KeyError for " + pformat(e_key))
                     else:
@@ -352,27 +354,26 @@ class UJS_CAT_NJS_DataUtils:
                     delta = (datetime.datetime.utcnow() -
                             datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-                    u_j_s['running_time'] = str(delta) #delta.total_seconds()
+                    u_j_s['running_time'] = delta.total_seconds() #str(delta)
                 elif ('finish_time' in u_j_s and 'exec_start_time' in u_j_s
                         and u_j_s['status'] == 'done'):
                     delta = (datetime.datetime.fromtimestamp(u_j_s['finish_time']/1000) -
                             datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-                    u_j_s['run_time'] = str(delta) #delta.total_seconds()
+                    u_j_s['run_time'] = delta.total_seconds() #str(delta)
                 elif (u_j_s['stage'] == 'created' and 'creation_time' in u_j_s
                         and u_j_s['status'] not in ['done','running','canceled by user','error']
                         and job_error[j_idx] == {}):
                     delta = (datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(
                                     u_j_s['creation_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-                    u_j_s['queued_time'] = str(delta) #delta.total_seconds()
+                    u_j_s['queued_time'] = delta.total_seconds() #str(delta)
                     u_j_s['status'] = 'queued'
                 else:
                     u_j_s['status'] = 'not created'
 
                 ujs_ret.append(u_j_s)
 
-        #log("Job count={}".format(len(ujs_ret)))
         return ujs_ret
 
     def get_exec_stats_from_cat(self):
@@ -584,8 +585,17 @@ class UJS_CAT_NJS_DataUtils:
 
         return filtered_ujs
 
+    def convert_time_info(self, ujs_arr):
+        #convert time_info from [utc_string, utc_string, utc_string] to [epoch_timestamp*3]
+        for u_j_s in ujs_arr:
+            if u_j_s['time_info']:
+                #log("Before {}".format(pformat(u_j_s['time_info'])))
+                u_j_s['time_info'] = [_timestamp_from_utc(t_j) if t_j else None for t_j in u_j_s['time_info']]
+                #log("After {}".format(pformat(u_j_s['time_info'])))
+        return ujs_arr
 
     def init_clients(self, token):
+        '''
         #for prod environment
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://appdev.kbase.us/services/auth/', token=token)
@@ -599,7 +609,6 @@ class UJS_CAT_NJS_DataUtils:
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        '''
 
 
     def process_user_parameters(self, params):

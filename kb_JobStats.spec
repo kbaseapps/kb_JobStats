@@ -70,4 +70,17 @@ module kb_JobStats {
     
     funcdef get_user_metrics(UserMetricsParams params)
         returns (UserMetricsResult output) authentication required;
+
+    typedef structure {
+        list<user_id> user_ids;
+        int begin;
+        int end;
+    } UserJobStatesParams;
+
+    typedef structure {
+        UnspecifiedObject user_job_states;
+    } UserJobStatesResult;
+    
+    funcdef get_user_job_states(UserJobStatesParams params)
+        returns (UserJobStatesResult ujs_records) authentication required;
 };

@@ -2,6 +2,7 @@
 #BEGIN_HEADER
 import logging
 from core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
+from ujsdb_controller import UJSmongoDBController
 #END_HEADER
 
 
@@ -23,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_JobStats.git"
-    GIT_COMMIT_HASH = "6896e5ee8e893e951400ab361048554921f1930a"
+    GIT_COMMIT_HASH = "57413c650470f69cbce832ca8bef4ce3cfbbb8a5"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -38,6 +39,7 @@ This KBase SDK module implements methods for generating various KBase metrics on
         self.scratch = config['scratch']
         self.ws_url = config['workspace-url']
         self.ujs_cat_njs_util = UJS_CAT_NJS_DataUtils(self.config)
+        self.ujsc = UJSmongoDBController(self.config);
         #END_CONSTRUCTOR
         pass
 
@@ -94,6 +96,27 @@ This KBase SDK module implements methods for generating various KBase metrics on
                              'output is not type dict as required.')
         # return the results
         return [output]
+
+    def get_user_job_states(self, ctx, params):
+        """
+        :param params: instance of type "UserJobStatesParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "begin" of Long, parameter "end" of Long
+        :returns: instance of type "UserJobStatesResult" -> structure:
+           parameter "user_job_states" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: ujs_records
+        #BEGIN get_user_job_states
+        ujs_records = self.ujsc.get_user_job_states(ctx['user_id'], params)
+        #END get_user_job_states
+
+        # At some point might do deeper type checking...
+        if not isinstance(ujs_records, dict):
+            raise ValueError('Method get_user_job_states return value ' +
+                             'ujs_records is not type dict as required.')
+        # return the results
+        return [ujs_records]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
